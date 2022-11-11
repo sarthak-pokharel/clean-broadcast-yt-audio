@@ -109,7 +109,8 @@
             await playSong(surl);
         }
         $("#stream-btn").on('click', function(){
-            $(this).prop('disabled', true);
+            // $(this).prop('disabled', true);
+            alert("Streaming Now, please wait ...");
             syncronizationLoader();
             setInterval(syncronizationLoader, 2500);
         })
