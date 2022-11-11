@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synchronize Music</title>
+</head>
+
+<body>
+    <div class="app">
+        <form name="share-music">
+            <div>
+                Song Source: <input type="url" name="song-url" id="song-url" value="https://youtu.be/a8E1sQLtwJ4" size="50" />
+            </div>
+            <br>
+            <div>
+                <input type="submit" value="Listen Syncho">
+            </div>
+        </form>
+    </div>
+    <script>
+
+        function Main() {
+
+            setEvents();
+
+        }
+
+        function setEvents() {
+            let createUserForm = document.forms["share-music"];
+
+            createUserForm.addEventListener('submit', ev => {
+                ev.preventDefault();
+            })
+        }
+
+
+
+        window.addEventListener('load', Main);
+
+
+    </script>
+</body>
+
+</html>

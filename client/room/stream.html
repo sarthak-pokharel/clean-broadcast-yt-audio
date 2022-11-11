@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JukeBox Room</title>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js"
+        integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <style>
+        html,
+        body,
+        .app {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .streamingbtn-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 50px;
+        }
+
+        .streamingbtn-container button {
+            width: 10em;
+            height: 3em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <div class="streamingbtn-container">
+            <button type="submit" id="stream-btn">
+                Stream
+            </button>
+            <div id="track-info">
+                Click to play track
+            </div>
+            <div>
+                <audio controls style="pointer-events: none;"></audio>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        let pl;
+        let sourcesMapping = {};
+        let currentRoomId = new URL(location.href).pathname.split("/")[2];
+        let audioState = {
+            paused: true,
+            globalTimeStamp: Date.now(),
+            audioTimeStamp: 0,
+            audioUrl: null
+        }
+        let lastUpdatedServerGlobalTimeStamp = null;
+        async function syncronizationLoader() {
+            let latestSettings = await $.post('/api/latest-audio-state', { room: currentRoomId });
+            if (!latestSettings.audioUrl) return;
+            if(latestSettings.audioUrl != audioState.audioUrl) {
+                await playSongFromUrl(latestSettings.audioUrl);
+            };
+            if(lastUpdatedServerGlobalTimeStamp == latestSettings.globalTimeStamp) return;
+            lastUpdatedServerGlobalTimeStamp = latestSettings.globalTimeStamp;
+            let deltaTime = (Date.now() - latestSettings.globalTimeStamp) / 1000;
+            
+            if(latestSettings.paused != "false") deltaTime = 0;
+
+            let tsCurrentTime = (+latestSettings.audioTimeStamp) + deltaTime;
+            let netDelt = Math.abs(tsCurrentTime - pl[0].currentTime);
+            if(netDelt < 0.5) return;
+            pl[0].currentTime = tsCurrentTime;
+            // console.log(deltaTime)
+            if(latestSettings.paused == "false") {
+                pl[0].play();
+            }else {
+                pl[0].pause();
+            }
+            console.log(latestSettings)
+        }
+        function getSource(src) {
+            return $.post('/api/get-song-source', { url: src });
+        }
+        async function playSong(songurl) {
+            pl.prop("src", sourcesMapping[songurl].sources[0].url);
+            await pl[0].load();
+            await pl[0].play();
+            $("#track-info").text(sourcesMapping[songurl].full.videoDetails.title)
+            audioState.paused = false;
+            audioState.globalTimeStamp = Date.now();
+            audioState.audioTimeStamp = pl[0].currentTime;
+            audioState.audioUrl = songurl;
+        }
+        async function playSongFromUrl(surl) {
+            let soundsrc = await getSource(surl);
+            soundsrc.sources.sort((a, b) => a.bitrate - b.bitrate)
+            console.log(soundsrc)
+            sourcesMapping[surl] = soundsrc;
+            await playSong(surl);
+        }
+        $("#stream-btn").on('click', function(){
+            $(this).prop('disabled', true);
+            syncronizationLoader();
+            setInterval(syncronizationLoader, 2500);
+        })
+        window.onload = function () {
+            pl = $("audio");
+        }
+    </script>
+
+</body>
+
+</html>

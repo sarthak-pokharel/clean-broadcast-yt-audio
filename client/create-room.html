@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Room</title>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js"
+        integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="app">
+        <form name="create-room">
+            <div>
+                Room-ID: <input type="text" name="roomid" id="roomid" value="cuzwhynot" autocomplete />
+            </div>
+            <div>
+                <input type="submit" value="Submit">
+            </div>
+        </form>
+    </div>
+    <script>
+
+        function Main() {
+
+            setEvents();
+
+        }
+
+        function setEvents() {
+            let createUserForm = document.forms["create-room"];
+            let disableElems = [$(createUserForm).find("input")];
+            disableElems.disable = ()=>disableElems.forEach(x=>x.prop('disabled', true));
+            disableElems.enable = ()=>disableElems.forEach(x=>x.prop('disabled', false));
+
+            createUserForm.addEventListener('submit', ev => {
+                ev.preventDefault();
+                disableElems.disable();
+                let roomid = createUserForm['roomid'].value;
+                $.post("/api/create-room",
+                    { roomid }, (dat) => {
+                        disableElems.enable();
+                        if(dat.error == false){
+                            location.href = "/r/"+roomid
+                        }
+                    });
+            })
+        }
+
+
+
+        window.addEventListener('load', Main);
+
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JukeBox Room</title>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js"
+        integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <style>
+        td {
+            border: 1px solid black;
+            /* border-collapse: collapse; */
+        }
+        tr,td {
+            /* padding: 2% 10%; */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <form name="import-song">
+
+            <div>
+                Song URL: <input type="url" name="song-url" id="song-url" value="https://youtu.be/tui0A3eZXO0"
+                    size="40" />
+            </div>
+            <br>
+            <div>
+                <!-- <input type="submit" value="Play Song">  -->
+                <button type="button" id="add-to-queue">Add to Queue</button>
+            </div>
+        </form>
+        <br>
+        <div class="player">
+            <audio controls="controls" id="main-player">
+            </audio>
+        </div>
+        <div>
+            <table id="queue-display">
+                <caption>Playlist/Queue</caption>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="./room.js"></script>
+
+</body>
+
+</html>
