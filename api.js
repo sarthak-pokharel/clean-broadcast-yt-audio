@@ -2,7 +2,7 @@
 import express from "express";
 import { v4 as genUniqueHash } from 'uuid';  
 import {createUser} from './db.js'
-import {sourceFetcher} from './sourceHandler.js';
+import {sourceFetcher,playListScrape} from './sourceHandler.js';
 import {getRoomsList, setRoomsList} from './db.js'
 
 
@@ -52,6 +52,18 @@ app.post("/get-song-source", async(req,res)=>{
     }
 })
 
+app.post('/scrape-yt-playlist', async function(req,res) {
+    try {
+        let plUrl = req.body.url;
+        let list = await playListScrape(plUrl);
+        res.json(list);
+        
+    }catch(e){
+        console.log(e);
+        res.end("error");
+    }
+})
+
 let rooms;
 
 function createRoom(req,res,rid){
@@ -81,6 +93,7 @@ app.post('/synchronize', async function verifyAdmin(req,res,next){
     }
     next();
 });
+
 
 
 app.post('/synchronize', (req,res)=>{

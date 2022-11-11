@@ -6,7 +6,7 @@ let createUserForm;
 
 function Main() {
     createUserForm = document.forms["import-song"];
-    loadingDisableables = [ $(createUserForm).find("input") ];
+    loadingDisableables = [ $(createUserForm).find("input,button") ];
     loadingDisableables.disable = () => loadingDisableables.forEach(x=>x.prop('disabled', true));
     loadingDisableables.enable = () => loadingDisableables.forEach(x=>x.prop('disabled', false));
     pl = $("#main-player");
@@ -27,25 +27,37 @@ async function playSongFromUrl(surl){
 
 let queue = [], currentSong = -1;
 
-async function addtoqueue(e){
-    e.preventDefault();
+
+async function addtoqueue(ev,v){
+    ev.preventDefault();
     loadingDisableables.disable();
-    let surl = createUserForm['song-url'].value;
-    let songDetails = await getSource(surl);
+    let surl;
+    let songDetails, stitle;
+    if(v){
+        surl = v.url;
+        songDetails = {};
+        stitle = v.title;
+        // console.log(stitle)
+    }else{
+        surl = createUserForm['song-url'].value;
+        songDetails = await getSource(surl);
+        stitle = songDetails.full.videoDetails.title;
+    }
     queue.push({surl,songDetails});
     let qlc = queue.length-1;
+    
     $("#queue-display tbody").append(`
 
 <tr>
 <td style="cursor: pointer;"> ▶️ </td>
-<td>${songDetails.full.videoDetails.title.substr(0,40).padEnd(43,".")}</td>
+<td>${stitle.substr(0,40).padEnd(43,".")}</td>
 <td style="cursor: pointer;"> ❌ </td>
 </tr>
     `);
     $("tr").last().children().eq(0).on('click', function(){
         let thisid = [...this.parentNode.parentNode.children].indexOf(this.parentNode);
         currentSong = thisid;
-        pl[0].src="";
+        // pl[0].src="";
         loadingDisableables.disable();
         playSongFromQueue(currentSong);
     });
@@ -66,20 +78,25 @@ async function addtoqueue(e){
 }
 
 function setEvents() {
-    createUserForm.addEventListener('submit', addtoqueue);
+    createUserForm.addEventListener('submit', (e)=>{e.preventDefault()});
     pl[0].onseeked = ()=>{
         syncronizationUpdater();
     }
     pl[0].onended = ()=>{
         playNext();
     }
+    $("#import-playlist").on("click", async function(e){
+        let yturls = await $.post('/api/scrape-yt-playlist', {url:createUserForm['song-url'].value});
+        yturls.videos.forEach(v=>{
+            addtoqueue(e, v);
+        })
+    })
     $("#add-to-queue").on('click',addtoqueue);
 }
 
 function playNext(){
     if(queue.length == 0) {
         $("audio")[0].pause();
-        $("audio").prop("src","");
         return;
     }
     if(currentSong == -1 || (currentSong >= (queue.length-1))){
@@ -129,9 +146,24 @@ async function syncronizationLoader(){
 
 
 async function playSong(songurl){
-    pl.prop("src", sourcesMapping[songurl][0].url);
-    await pl[0].load();
-    await pl[0].play();
+    // pl[0].children[0].src = sourcesMapping[songurl][0].url;
+    // pl[0].children[0].type = sourcesMapping[songurl][0].mimeType;
+    [...pl[0].children].forEach(x=>x.remove())
+    sourcesMapping[songurl].forEach(s=>{
+        let sourcetag = document.createElement('source');
+        sourcetag.src = s.url;
+        sourcetag.type = s.mimeType;
+        pl[0].appendChild(sourcetag);
+    });
+    console.log(sourcesMapping[songurl][0])
+    try {
+        await pl[0].load();
+        await pl[0].play();
+    }catch(e){
+        loadingDisableables.enable();
+        createUserForm['song-url'].value = songurl;
+        return ;
+    }
     audioState.paused = false;
     audioState.globalTimeStamp = Date.now();
     audioState.audioTimeStamp = pl[0].currentTime;

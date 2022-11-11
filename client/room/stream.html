@@ -93,8 +93,6 @@
         }
         async function playSong(songurl) {
             pl.prop("src", sourcesMapping[songurl].sources[0].url);
-            await pl[0].load();
-            await pl[0].play();
             $("#track-info").text(sourcesMapping[songurl].full.videoDetails.title)
             audioState.paused = false;
             audioState.globalTimeStamp = Date.now();
