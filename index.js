@@ -7,7 +7,7 @@ import bodyParser from 'body-parser';
 
 const app = express();
 const server = http.createServer(app);
-const __PORT__ = process.env.__PORT__ || 8080;
+const __PORT__ = process.env.PORT || 8080;
 
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
